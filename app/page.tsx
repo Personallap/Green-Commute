@@ -49,7 +49,7 @@ export default function Home() {
                 efficiency. Make informed decisions for a sustainable future.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/register" className="w-full sm:w-auto">
+                <Link href="/search" className="w-full sm:w-auto">
                   <Button className="h-12 px-8 text-base w-full sm:w-auto">
                     Start Analyzing <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
