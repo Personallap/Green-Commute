@@ -3,14 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import { Button, Card } from "@/components/ui/auth-components";
-import {
-  Leaf,
-  Map,
-  BarChart3,
-  ArrowRight,
-  CheckCircle2,
-  Quote,
-} from "lucide-react";
+import { FeatureCard } from "@/components/landing/feature-card";
+import { Step } from "@/components/landing/step";
+import { QuoteCard } from "@/components/landing/quote-card";
+import { Leaf, Map, BarChart3, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function Home() {
   return (
@@ -179,55 +175,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-  );
-}
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-start p-6 bg-white rounded-2xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
-      <div className="mb-4 p-3 bg-gray-50 rounded-xl">{icon}</div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 leading-relaxed">{description}</p>
-    </div>
-  );
-}
-
-function Step({
-  number,
-  title,
-  description,
-}: {
-  number: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center text-center">
-      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-600 text-white text-xl font-bold mb-6 shadow-lg shadow-green-600/20">
-        {number}
-      </div>
-      <h3 className="text-xl font-semibold text-gray-900 mb-3">{title}</h3>
-      <p className="text-gray-600 leading-relaxed max-w-xs">{description}</p>
-    </div>
-  );
-}
-
-function QuoteCard({ quote, author }: { quote: string; author: string }) {
-  return (
-    <figure className="flex flex-col gap-4 p-8 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-      <Quote className="h-8 w-8 text-green-300 opacity-50" />
-      <blockquote className="text-xl font-medium leading-relaxed text-white">
-        &quot;{quote}&quot;
-      </blockquote>
-      <figcaption className="text-green-200 font-medium">— {author}</figcaption>
-    </figure>
   );
 }
