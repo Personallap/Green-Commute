@@ -5,6 +5,8 @@ import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { Button, Card } from "@/components/ui/auth-components";
 import { Leaf, LogOut, User } from "lucide-react";
+import { StatsCharts } from "@/components/dashboard/stats-charts";
+import { TripHistory } from "@/components/dashboard/trip-history";
 
 export default function DashboardPage() {
   const { user, logout, isLoading, isAuthenticated } = useAuth();
@@ -53,19 +55,26 @@ export default function DashboardPage() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
             {/* Welcome Card */}
             <Card className="p-6 col-span-full">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Welcome back, {user.username}! 👋
-              </h2>
-              <p className="text-gray-600">
-                You&apos;ve saved{" "}
-                <span className="font-bold text-green-600">
-                  {user.total_co2_saved}g
-                </span>{" "}
-                of CO2 so far. Keep it up!
-              </p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                    Welcome back, {user.username}! 👋
+                  </h2>
+                  <p className="text-gray-600">
+                    You&apos;ve saved{" "}
+                    <span className="font-bold text-green-600">
+                      {user.total_co2_saved}g
+                    </span>{" "}
+                    of CO2 so far. Keep it up!
+                  </p>
+                </div>
+                <Button onClick={() => router.push("/search")}>
+                  Plan New Trip
+                </Button>
+              </div>
             </Card>
 
             {/* Quick Stats */}
@@ -103,6 +112,9 @@ export default function DashboardPage() {
               </p>
             </Card>
           </div>
+
+          <StatsCharts />
+          <TripHistory />
         </div>
       </main>
     </div>
