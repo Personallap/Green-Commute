@@ -13,7 +13,8 @@ def create_app(config_class=Config):
     
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app)
+    # Allow all origins for production to avoid CORS issues
+    CORS(app, resources={r"/*": {"origins": "*"}})
     
     # Register blueprints
     from app.routes import routes, auth
