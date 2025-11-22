@@ -9,13 +9,23 @@ def seed_database():
         db.create_all()
         
         print("Creating sample users...")
-        users = [
-            User(username='rahul_student', email='rahul@example.com', total_co2_saved=250.5),
-            User(username='shreya_tech', email='shreya@example.com', total_co2_saved=180.3),
-            User(username='karan_eco', email='karan@example.com', total_co2_saved=420.7),
-            User(username='priya_commuter', email='priya@example.com', total_co2_saved=350.0),
-            User(username='amit_green', email='amit@example.com', total_co2_saved=290.8)
+        users_data = [
+            {'username': 'rahul_student', 'email': 'rahul@example.com', 'password': 'password123', 'total_co2_saved': 250.5},
+            {'username': 'shreya_tech', 'email': 'shreya@example.com', 'password': 'password123', 'total_co2_saved': 180.3},
+            {'username': 'karan_eco', 'email': 'karan@example.com', 'password': 'password123', 'total_co2_saved': 420.7},
+            {'username': 'priya_commuter', 'email': 'priya@example.com', 'password': 'password123', 'total_co2_saved': 350.0},
+            {'username': 'amit_green', 'email': 'amit@example.com', 'password': 'password123', 'total_co2_saved': 290.8}
         ]
+        
+        users = []
+        for user_data in users_data:
+            user = User(
+                username=user_data['username'],
+                email=user_data['email'],
+                total_co2_saved=user_data['total_co2_saved']
+            )
+            user.set_password(user_data['password'])
+            users.append(user)
         
         for user in users:
             db.session.add(user)
@@ -302,10 +312,24 @@ def seed_database():
             StopConnection(from_stop_id=2, to_stop_id=15, line_id=12, distance_km=16.5, duration_minutes=28)
         ]
         
+        # Add connections in both directions for bidirectional routing
+        print("Creating bidirectional connections...")
         for connection in connections:
+            # Add original direction
             db.session.add(connection)
+            # Add reverse direction
+            reverse_connection = StopConnection(
+                from_stop_id=connection.to_stop_id,
+                to_stop_id=connection.from_stop_id,
+                line_id=connection.line_id,
+                distance_km=connection.distance_km,
+                duration_minutes=connection.duration_minutes
+            )
+            db.session.add(reverse_connection)
         
         db.session.commit()
+        
+        total_connections = len(connections) * 2  # Count both directions
         
         print("\n" + "=" * 80)
         print("Database seeded successfully!")
@@ -313,7 +337,7 @@ def seed_database():
         print(f"[+] Created {len(users)} users")
         print(f"[+] Created {len(stops)} transit stops")
         print(f"[+] Created {len(lines)} transit lines")
-        print(f"[+] Created {len(connections)} stop connections")
+        print(f"[+] Created {total_connections} stop connections (bidirectional)")
         print("\n[*] Major Route Pairs Available:")
         print("  1. Connaught Place -> Noida City Center")
         print("  2. Connaught Place -> Dwarka Sector 21")
