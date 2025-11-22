@@ -13,8 +13,16 @@ def create_app(config_class=Config):
     
     db.init_app(app)
     jwt.init_app(app)
-    # Allow all origins for production to avoid CORS issues
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    # Allow frontend origins (production and development)
+    CORS(app, resources={
+        r"/*": {
+            "origins": [
+                "https://green-commute.vercel.app",
+                "http://localhost:3000",
+                "http://localhost:5173"
+            ]
+        }
+    })
     
     # Register blueprints
     from app.routes import routes, auth
