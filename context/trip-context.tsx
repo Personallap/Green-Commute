@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { AxiosError } from "axios";
 
 export interface RouteOption {
   id: string;
@@ -119,9 +120,16 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
         }
       );
 
+      console.log("API Response:", response.data);
+      console.log("Mapped Routes:", routes);
       setSearchResults(routes);
-    } catch (error) {
-      console.error("Failed to search routes:", error);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      console.error("Failed to search routes:", axiosError);
+      if (axiosError.response) {
+        console.error("Error Response Data:", axiosError.response.data);
+        console.error("Error Status:", axiosError.response.status);
+      }
       // Optionally handle error state here, e.g., show a toast
     } finally {
       setIsSearching(false);
