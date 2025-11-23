@@ -15,7 +15,7 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     # Allow frontend origins (production and development)
     CORS(app, resources={
-        r"/*": {
+        r"/api/*": {
             "origins": [
                 "https://green-commute.vercel.app",
                 "http://localhost:3000",
