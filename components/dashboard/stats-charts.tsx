@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -15,25 +15,80 @@ import {
   Cell,
 } from "recharts";
 import { Card } from "@/components/ui/auth-components";
+import { useTrip } from "@/context/trip-context";
 
-const barData = [
-  { name: "Trip 1", co2: 120, money: 2.5 },
-  { name: "Trip 2", co2: 80, money: 4.0 },
-  { name: "Trip 3", co2: 200, money: 1.5 },
-  { name: "Trip 4", co2: 150, money: 3.0 },
-  { name: "Trip 5", co2: 90, money: 2.0 },
-];
-
-const pieData = [
-  { name: "Bus", value: 400 },
-  { name: "Train", value: 300 },
-  { name: "Bike", value: 300 },
-  { name: "Walk", value: 200 },
-];
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8B5CF6"];
 
 export function StatsCharts() {
+  const { tripHistory, isLoadingHistory } = useTrip();
+
+  // Generate bar chart data from trip history
+  const barData = useMemo(() => {
+    return tripHistory
+      .slice(0, 5)
+      .reverse()
+      .map((trip, idx) => ({
+        name: `Trip ${tripHistory.length - idx}`,
+        co2: trip.co2Saved,
+        money: trip.moneySaved,
+      }));
+  }, [tripHistory]);
+
+  // Generate pie chart data from trip modes
+  const pieData = useMemo(() => {
+    const modeCounts: Record<string, number> = {};
+
+    tripHistory.forEach((trip) => {
+      const mode = trip.mode || "unknown";
+      modeCounts[mode] = (modeCounts[mode] || 0) + 1;
+    });
+
+    return Object.entries(modeCounts).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+    }));
+  }, [tripHistory]);
+
+  if (isLoadingHistory) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="p-6">
+          <div className="flex items-center justify-center h-[300px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center justify-center h-[300px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (tripHistory.length === 0) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Savings Analysis
+          </h3>
+          <div className="flex items-center justify-center h-[300px]">
+            <p className="text-gray-500">No trip data available yet</p>
+          </div>
+        </Card>
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Transport Modes
+          </h3>
+          <div className="flex items-center justify-center h-[300px]">
+            <p className="text-gray-500">No trip data available yet</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <Card className="p-6">

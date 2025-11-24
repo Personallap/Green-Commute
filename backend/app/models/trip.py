@@ -19,6 +19,7 @@ class Trip(db.Model):
     co2_saved = db.Column(db.Float, nullable=False)
     transit_co2 = db.Column(db.Float, nullable=False)
     car_co2 = db.Column(db.Float, nullable=False)
+    mode = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), nullable=True)
@@ -40,5 +41,6 @@ class Trip(db.Model):
             'co2_saved': self.co2_saved,
             'transit_co2': self.transit_co2,
             'car_co2': self.car_co2,
+            'mode': self.mode,
             'created_at': self.created_at.isoformat()
         }
