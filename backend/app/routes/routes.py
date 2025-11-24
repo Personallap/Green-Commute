@@ -85,7 +85,8 @@ def save_trip():
             transfers=data.get('transfers', 0),
             co2_saved=data['co2_saved'],
             transit_co2=data['transit_co2'],
-            car_co2=data['car_co2']
+            car_co2=data['car_co2'],
+            mode=data.get('mode', 'bus')
         )
         
         db.session.add(trip)
@@ -234,23 +235,24 @@ def _generate_sample_routes(origin, destination, origin_lat, origin_lng, dest_la
         co2_saved = car_co2 - transit_co2
         
         routes.append({
-            'name': mode_info['name'],
-            'mode': mode_info['mode'],
-            'distance_km': round(distance_km, 2),
-            'duration_minutes': round(duration_minutes, 2),
-            'cost': round(cost, 2),
-            'transfers': idx,
-            'transit_co2': round(transit_co2, 2),
-            'car_co2': round(car_co2, 2),
-            'co2_saved': round(co2_saved, 2),
             'segments': [
                 {
                     'mode': mode_info['mode'],
+                    'from_stop': origin,
+                    'to_stop': destination,
                     'distance_km': round(distance_km, 2),
                     'duration_minutes': round(duration_minutes, 2),
-                    'cost': round(cost, 2)
+                    'cost': round(cost, 2),
+                    'co2': round(transit_co2, 2)
                 }
-            ]
+            ],
+            'total_distance_km': round(distance_km, 2),
+            'total_duration_minutes': round(duration_minutes, 2),
+            'total_cost': round(cost, 2),
+            'total_co2': round(transit_co2, 2),
+            'car_co2': round(car_co2, 2),
+            'co2_saved': round(co2_saved, 2),
+            'transfers': idx
         })
     
     return routes

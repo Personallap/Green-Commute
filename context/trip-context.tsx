@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { AxiosError } from "axios";
+import { useAuth } from "@/context/auth-context";
 
 export interface RouteOption {
   id: string;
@@ -24,6 +25,7 @@ export interface Trip {
   co2Saved: number;
   moneySaved: number;
   mode: string;
+  duration?: string;
 }
 
 interface RouteSegment {
@@ -53,6 +55,11 @@ interface TripContextType {
   searchRoutes: (from: string, to: string) => Promise<void>;
   tripHistory: Trip[];
   addTrip: (trip: Trip) => void;
+  saveTrip: (route: RouteOption) => Promise<boolean>;
+  fetchTripHistory: () => Promise<void>;
+  isLoadingHistory: boolean;
+  currentSearchOrigin: string;
+  currentSearchDestination: string;
 }
 
 const TripContext = createContext<TripContextType | undefined>(undefined);
@@ -61,30 +68,26 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
   const [searchResults, setSearchResults] = useState<RouteOption[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [tripHistory, setTripHistory] = useState<Trip[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [currentSearchOrigin, setCurrentSearchOrigin] = useState("");
+  const [currentSearchDestination, setCurrentSearchDestination] = useState("");
+  const { refreshUser } = useAuth();
 
-  // Load history from local storage on mount
+  // Fetch trip history on mount if user is authenticated
   useEffect(() => {
-    const savedHistory = localStorage.getItem("trip_history");
-    if (savedHistory) {
-      try {
-        // Use a timeout to avoid synchronous state update warning during mount
-        setTimeout(() => {
-          setTripHistory(JSON.parse(savedHistory));
-        }, 0);
-      } catch (e) {
-        console.error("Failed to parse trip history", e);
-      }
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      fetchTripHistory();
     }
   }, []);
-
-  // Save history to local storage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("trip_history", JSON.stringify(tripHistory));
-  }, [tripHistory]);
 
   const searchRoutes = async (from: string, to: string) => {
     setIsSearching(true);
     setSearchResults([]);
+
+    // Store current search locations
+    setCurrentSearchOrigin(from);
+    setCurrentSearchDestination(to);
 
     try {
       const response = await api.post("/routes/search", {
@@ -140,6 +143,150 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
     setTripHistory((prev) => [trip, ...prev]);
   };
 
+  const fetchTripHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const userStr = localStorage.getItem("user_id");
+      if (!userStr) {
+        // Try to get user ID from auth/me endpoint
+        const meResponse = await api.get("/auth/me");
+        const userId = meResponse.data.user.id;
+        localStorage.setItem("user_id", userId.toString());
+
+        const response = await api.get(`/trips/${userId}`);
+        const trips = response.data.trips.map(
+          (trip: {
+            id: number;
+            origin: string;
+            destination: string;
+            created_at: string;
+            distance_km: number;
+            co2_saved: number;
+            cost: number;
+            mode?: string;
+            duration_minutes: number;
+          }) => ({
+            id: trip.id.toString(),
+            from: trip.origin,
+            to: trip.destination,
+            date: new Date(trip.created_at).toLocaleDateString(),
+            distance: `${trip.distance_km} km`,
+            co2Saved: trip.co2_saved,
+            moneySaved: trip.cost,
+            mode: trip.mode || "bus",
+            duration: `${Math.round(trip.duration_minutes)} min`,
+          })
+        );
+        setTripHistory(trips);
+      } else {
+        const userId = parseInt(userStr);
+        const response = await api.get(`/trips/${userId}`);
+        const trips = response.data.trips.map(
+          (trip: {
+            id: number;
+            origin: string;
+            destination: string;
+            created_at: string;
+            distance_km: number;
+            co2_saved: number;
+            cost: number;
+            mode?: string;
+            duration_minutes: number;
+          }) => ({
+            id: trip.id.toString(),
+            from: trip.origin,
+            to: trip.destination,
+            date: new Date(trip.created_at).toLocaleDateString(),
+            distance: `${trip.distance_km} km`,
+            co2Saved: trip.co2_saved,
+            moneySaved: trip.cost,
+            mode: trip.mode || "bus",
+            duration: `${Math.round(trip.duration_minutes)} min`,
+          })
+        );
+        setTripHistory(trips);
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      console.error("Failed to fetch trip history:", axiosError);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const saveTrip = async (route: RouteOption): Promise<boolean> => {
+    try {
+      const userStr = localStorage.getItem("user_id");
+      let userId: number | null = null;
+
+      if (userStr) {
+        userId = parseInt(userStr);
+      } else {
+        try {
+          const meResponse = await api.get("/auth/me");
+          userId = meResponse.data.user.id;
+          if (userId !== null) {
+            localStorage.setItem("user_id", userId.toString());
+          }
+        } catch {
+          console.log("User not authenticated, saving trip without user_id");
+        }
+      }
+
+      const distanceKm = parseFloat(route.distance.replace(" km", ""));
+      const durationMinutes = parseFloat(route.duration.replace(" min", ""));
+
+      // Calculate car CO2 for comparison (120g per km)
+      const carCo2 = distanceKm * 120;
+      const co2Saved = carCo2 - route.co2;
+
+      const tripData = {
+        user_id: userId ?? undefined,
+        origin: currentSearchOrigin,
+        destination: currentSearchDestination,
+        distance_km: distanceKm,
+        duration_minutes: durationMinutes,
+        cost: route.cost,
+        transfers: route.switches,
+        co2_saved: co2Saved,
+        transit_co2: route.co2,
+        car_co2: carCo2,
+        mode: route.mode,
+      };
+
+      const response = await api.post("/trips", tripData);
+
+      if (response.status === 201) {
+        // Add to local state
+        const newTrip: Trip = {
+          id: response.data.trip.id.toString(),
+          from: currentSearchOrigin,
+          to: currentSearchDestination,
+          date: new Date().toLocaleDateString(),
+          distance: route.distance,
+          co2Saved: co2Saved,
+          moneySaved: route.cost,
+          mode: route.mode,
+          duration: route.duration,
+        };
+        addTrip(newTrip);
+
+        // Refresh trip history to get updated data
+        await fetchTripHistory();
+
+        // Refresh user data to update dashboard CO2 stats
+        await refreshUser();
+
+        return true;
+      }
+      return false;
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      console.error("Failed to save trip:", axiosError);
+      return false;
+    }
+  };
+
   return (
     <TripContext.Provider
       value={{
@@ -148,6 +295,11 @@ export function TripProvider({ children }: { children: React.ReactNode }) {
         searchRoutes,
         tripHistory,
         addTrip,
+        saveTrip,
+        fetchTripHistory,
+        isLoadingHistory,
+        currentSearchOrigin,
+        currentSearchDestination,
       }}
     >
       {children}

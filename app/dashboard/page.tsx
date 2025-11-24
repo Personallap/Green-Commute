@@ -45,7 +45,7 @@ export default function DashboardPage() {
                 <span>{user.username}</span>
               </div>
               <Button variant="outline" onClick={logout} className="w-auto">
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4 mr-2 text-black" />
                 Sign out
               </Button>
             </div>

@@ -26,7 +26,7 @@ export function SearchForm() {
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">From</label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <MapPin className="absolute left-3 top-3 h-4 w-4 text-black" />
             <Input
               value={from}
               onChange={(e) => setFrom(e.target.value)}
@@ -39,7 +39,7 @@ export function SearchForm() {
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">To</label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <MapPin className="absolute left-3 top-3 h-4 w-4 text-black" />
             <Input
               value={to}
               onChange={(e) => setTo(e.target.value)}
